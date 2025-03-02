@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "themoviedb-javascript-library": "^3.0.3",
+    "tmdb-js-wrapper": "^1.0.4"
+  }
+}

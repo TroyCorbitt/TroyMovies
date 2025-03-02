@@ -1,17 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Information App</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Information App</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/themoviedb-javascript-library/themoviedb.js"></script>
+  <script src="https://unpkg.com/tmdb-js-wrapper/dist/tmdb-js-browser.js"></script>
 </head>
+<header id="titleSection">
+    <h1>MovieLovers</h1>
+</header>
 <body>
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search for movies..." autofocus>
-        <button onclick="searchMovies()">Search</button>
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search for movies..." autofocus>
+    <button id="searchButton">Search</button>
+    <select id="genreSelect">
+      <option value="">Select a Genre</option>
+    </select>
+    <button id="filterByGenreButton">Filter by Genre</button>
+
+    <!-- Review Buttons Grouped Together -->
+    <div class="review-actions">
+      <button id="reviewButton">Get Reviews</button>
+      <input type="text" id="userReview" placeholder="Write your review..." />
+      <button id="submitReview">Submit Review</button>
     </div>
-    <div id="movies" class="movies"></div>
-    <script src="script.js"></script>
+
+    <!-- Refresh Page Button -->
+    <button id="refreshButton">Refresh Page</button>
+  </div>
+
+  <!-- Movie Reviews -->
+  <div id="reviewSection">
+    <h3>Movie Reviews</h3>
+    <div id="reviewDetails" class="review-container"></div>
+
+
+    <div id="creditsOverlay" class="overlay">
+        <div class="overlay-content">
+            <span id="closeOverlay" class="close-btn">&times;</span>
+            <div id="creditsContent"></div>
+        </div>
+    </div>
+  
+    
+  </div>
+
+  <div id="movies" class="movies"></div>
+
+  <!-- Make sure to include the script AFTER the HTML elements -->
+  <script src="script.js"></script>
+  <footer id="footer">
+    <p>Made by Troy Corbitt</p>
 </body>
+
+
 </html>
