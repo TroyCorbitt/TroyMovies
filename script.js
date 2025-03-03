@@ -1,54 +1,77 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log("DOM fully loaded");
+    console.log("DOM fully loaded and parsed");
 
-    document.getElementById('refreshButton').addEventListener('click', function() {
-        location.reload(); // Reloads the current page
-    });
-
-    document.addEventListener('DOMContentLoaded', fetchGenres);
-
+    // Declare API constants first
     const API_KEY = 'f2f241baa959edc9cefc4c406d947fad';
     const BASE_URL = 'https://api.themoviedb.org/3';
 
     let lastSearchedMovieId = null; // Store the last searched movie ID
-    
-function searchMovies() {
-    const input = document.getElementById('searchInput').value;
-    fetchMovies(input);
-}
 
-function fetchMovies(query, genre = '') {
-    const apiKey = 'f2f241baa959edc9cefc4c406d947fad'; // Use your TMDB API key
-    let url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURI(query)}`;
-    if (genre) {
-        url += `&with_genres=${genre}`;
+    document.getElementById('filterByGenreButton').addEventListener('click', function() {
+        console.log("Filter by Genre button clicked.");
+        filterMovies();
+    });
+
+    document.getElementById('refreshButton').addEventListener('click', function() {
+        console.log("Page reload triggered");
+        location.reload(); // Reloads the current page
+    });
+
+
+    // Now, call fetchGenres after variables are declared
+    fetchGenres();
+
+    function fetchGenres() {
+        console.log("Fetching genres...");
+        const url = `${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Genres fetched:", data.genres);
+                populateGenresDropdown(data.genres);
+            })
+            .catch(err => console.error('Failed to fetch genres:', err));
     }
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => displayMovies(data.results))
-        .catch(err => console.error('Error fetching the movie data:', err));
-}
+    function populateGenresDropdown(genres) {
+        console.log("Populating genre dropdown");
+        const select = document.getElementById('genreSelect');
+        genres.forEach(genre => {
+            const option = document.createElement('option');
+            option.value = genre.id;
+            option.textContent = genre.name;
+            select.appendChild(option);
+        });
+    }
 
+    document.getElementById('searchButton').addEventListener('click', searchMovies);
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchMovies();
+        }
+    });
 
-
-
-    
     function searchMovies() {
         const input = document.getElementById('searchInput').value;
+        console.log("Search input received:", input);
         if (!input) {
             console.log("Empty search input.");
             document.getElementById('movies').innerHTML = '<p>Please enter a movie title to search.</p>';
             return;
         }
 
-        console.log("Search initiated for:", input);
-        const url = `${BASE_URL}/search/movie?api_key=${API_KEY}&language=en-US&query=${encodeURIComponent(input)}&page=1&include_adult=false`;
+        fetchMovies(input);
+    }
+
+    function fetchMovies(query) {
+        console.log("Fetching movies for query:", query);
+        const url = `${BASE_URL}/search/movie?api_key=${API_KEY}&language=en-US&query=${encodeURIComponent(query)}&page=1&include_adult=false`;
 
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                console.log("Results received:", data);
+                console.log("Movies fetched:", data.results);
                 if (data.results && data.results.length > 0) {
                     lastSearchedMovieId = data.results[0].id; // Store first movie's ID
                     displayMovies(data.results);
@@ -62,18 +85,14 @@ function fetchMovies(query, genre = '') {
             });
     }
 
-    
     function displayMovies(movies) {
         let output = '';
         console.log("Displaying movies:", movies);
-
         movies.forEach(movie => {
             const posterPath = movie.poster_path 
                 ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
                 : 'https://via.placeholder.com/500x750?text=No+Image';
-
             console.log("Processing movie:", movie.title);
-
             output += `<div class="movie">
                 <img src="${posterPath}" alt="${movie.title} Poster">
                 <h3>${movie.title}</h3>
@@ -81,44 +100,41 @@ function fetchMovies(query, genre = '') {
                 <p class="overview">${movie.overview ? movie.overview.substring(0, 150) + '...' : 'No description available'}</p>
             </div>`;
         });
-
         document.getElementById('movies').innerHTML = output;
     }
 
-    function fetchGenres() {
-        theMovieDb.genres.getMovieList({}, function(response) {
-            const data = JSON.parse(response);
-            const select = document.getElementById('genreSelect');
-            data.genres.forEach(genre => {
-                const option = document.createElement('option');
-                option.value = genre.id;
-                option.textContent = genre.name;
-                select.appendChild(option);
-            });
-        }, function(error) {
-            console.error('Failed to fetch genres:', error);
-        });
-    }
     
-    function filterMovies() {
-        const genreId = document.getElementById('genreSelect').value;
-        const query = document.getElementById('searchInput').value || 'popular';
-        if (!genreId) {
-            alert("Please select a genre.");
-            return;
-        }
-        theMovieDb.genres.getMovies({"id": genreId}, function(response) {
-            const data = JSON.parse(response);
-            if (data && data.results) {
+    
+   function filterMovies() {
+    const genreId = document.getElementById('genreSelect').value;
+
+    if (!genreId) {
+        console.warn("No genre selected.");
+        alert("Please select a genre.");
+        return;
+    }
+
+    console.log(`Filtering movies for genre ID: ${genreId}`);
+
+    const url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=en-US&with_genres=${genreId}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Movies fetched for genre:", data.results);
+            if (data.results && data.results.length > 0) {
                 displayMovies(data.results);
             } else {
+                console.warn("No movies found for this genre.");
                 document.getElementById('movies').innerHTML = '<p>No movies found for this genre.</p>';
             }
-        }, function(error) {
+        })
+        .catch(error => {
             console.error('Error fetching the movies by genre:', error);
             document.getElementById('movies').innerHTML = '<p>Error fetching data. Check console for details.</p>';
         });
-    }
+}
+
         
 
     function fetchReviewsByMovieId(movieId) {
