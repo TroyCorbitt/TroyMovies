@@ -5,10 +5,33 @@ document.addEventListener('DOMContentLoaded', function () {
         location.reload(); // Reloads the current page
     });
 
+    document.addEventListener('DOMContentLoaded', fetchGenres);
+
     const API_KEY = 'f2f241baa959edc9cefc4c406d947fad';
     const BASE_URL = 'https://api.themoviedb.org/3';
 
     let lastSearchedMovieId = null; // Store the last searched movie ID
+    
+function searchMovies() {
+    const input = document.getElementById('searchInput').value;
+    fetchMovies(input);
+}
+
+function fetchMovies(query, genre = '') {
+    const apiKey = 'f2f241baa959edc9cefc4c406d947fad'; // Use your TMDB API key
+    let url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURI(query)}`;
+    if (genre) {
+        url += `&with_genres=${genre}`;
+    }
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => displayMovies(data.results))
+        .catch(err => console.error('Error fetching the movie data:', err));
+}
+
+
+
 
     
     function searchMovies() {
@@ -39,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    
     function displayMovies(movies) {
         let output = '';
         console.log("Displaying movies:", movies);
@@ -60,6 +84,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.getElementById('movies').innerHTML = output;
     }
+
+    function fetchGenres() {
+        theMovieDb.genres.getMovieList({}, function(response) {
+            const data = JSON.parse(response);
+            const select = document.getElementById('genreSelect');
+            data.genres.forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre.id;
+                option.textContent = genre.name;
+                select.appendChild(option);
+            });
+        }, function(error) {
+            console.error('Failed to fetch genres:', error);
+        });
+    }
+    
+    function filterMovies() {
+        const genreId = document.getElementById('genreSelect').value;
+        const query = document.getElementById('searchInput').value || 'popular';
+        if (!genreId) {
+            alert("Please select a genre.");
+            return;
+        }
+        theMovieDb.genres.getMovies({"id": genreId}, function(response) {
+            const data = JSON.parse(response);
+            if (data && data.results) {
+                displayMovies(data.results);
+            } else {
+                document.getElementById('movies').innerHTML = '<p>No movies found for this genre.</p>';
+            }
+        }, function(error) {
+            console.error('Error fetching the movies by genre:', error);
+            document.getElementById('movies').innerHTML = '<p>Error fetching data. Check console for details.</p>';
+        });
+    }
+        
 
     function fetchReviewsByMovieId(movieId) {
         const url = `${BASE_URL}/movie/${movieId}/reviews?api_key=${API_KEY}`;
